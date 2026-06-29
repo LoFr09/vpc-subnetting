@@ -1,34 +1,36 @@
 # Subnetting
 
-# Aufteilung
+## So habe ich gerechnet
 
-Ich habe es so gelernt, man jedes Oktet hat 8.
-8 + 8 + 8 + 8 = /32
-Wenn man nun nur das minmum möchte, zähl man die Zahl in Binär, pro Oktet hat es 254 verschiedene Hosts
+Eine IP hat 32 Bit. Das Präfix (z.B. /24) sagt, wie viele Bit fürs Netz sind, der
+Rest sind Hostbits. Adressen im Block = 2 ^ Hostbits.
 
-Wie habe ich es gerechnet:
+In AWS sind pro Subnetz **5 Adressen weg** (Netz, Router, DNS, reserviert, Broadcast).
+Darum rechne ich rückwärts: **nutzbare Hosts + 5**, dann die nächste Zweierpotenz.
 
+## Die drei Subnetze
 
-**Public/Web**  
-Braucht 250 Adressen heisst /24 wieso ? 255.255.255.0 = 255 verfügbar.
+**Public/Web — 10.0.1.0/24**
+250 + 5 = 255 → 256 Adressen → /24
+256 − 5 = **251 nutzbar**
 
-**App** 
-Braucht 60 Adressen heisst /26 wieso?
-255.255.255.192 = 63 Freie Adressen
+**App — 10.0.2.0/25**
+60 + 5 = 65 → 128 Adressen → /25 (64 reicht nicht, weil 64 − 5 = 59 < 60)
+128 − 5 = **123 nutzbar**
 
-**Management** 
-Braucht 12 Adressen heisst /28 wieso ?
-255.255.255.240 = 15 Freie Adressen. 
+**Management — 10.0.3.0/27**
+12 + 5 = 17 → 32 Adressen → /27 (16 reicht nicht, weil 16 − 5 = 11 < 12)
+32 − 5 = **27 nutzbar**
 
+## Übersicht
 
-# Übersicht
+| Subnet | CIDR | Bereich | Nutzbar |
+|---|---|---|---|
+| Public/Web | 10.0.1.0/24 | 10.0.1.0 – .255 | 251 |
+| App | 10.0.2.0/25 | 10.0.2.0 – .127 | 123 |
+| Management | 10.0.3.0/27 | 10.0.3.0 – .31 | 27 |
 
-**Public/Web:** 10.0.1.0/24
-**App:** 10.0.2.0/26
-**Management:** 10.0.3.0/28
+Keine Üeberlappung, alles in 10.0.0.0/16.
 
-So überschneiden sie sich nicht und brauchen nicht unnötig Platz.
-
-
-***Nicht sicher*** ich bin mir nicht sicher ob ich auch zb einfach bei Public/Web 10.0.1.250 und dan den block App bei 10.0.1.251 beginnen und bis 10.0.2.56 und dan Management 10.0.2.57 bis 10.0.2.69. 
-Bei so einer Situation würde ich an den Regios einfach googlen oder KI Fragen das ich auf nummer sicher gehe und keine Punkte verschenke.
+Ein Block startet immer auf einer Netzgrenze (/25 nur auf Vielfachen von 128, /27 nur
+auf Vielfachen von 32). Darum kann man nicht einfach mitten drin starten.
